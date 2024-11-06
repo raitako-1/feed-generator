@@ -10,9 +10,14 @@ const run = async () => {
     port: maybeInt(process.env.FEEDGEN_PORT) ?? 3000,
     listenhost: maybeStr(process.env.FEEDGEN_LISTENHOST) ?? 'localhost',
     sqliteLocation: maybeStr(process.env.FEEDGEN_SQLITE_LOCATION) ?? ':memory:',
-    subscriptionEndpoint:
-      maybeStr(process.env.FEEDGEN_SUBSCRIPTION_ENDPOINT) ??
+    subscriptionFirehoseEndpoint:
+      maybeStr(process.env.FEEDGEN_SUBSCRIPTION_FIREHOSE_ENDPOINT) ??
       'wss://bsky.network',
+    subscriptionJetstreamEndpoint:
+      maybeStr(process.env.FEEDGEN_SUBSCRIPTION_JETSTREAM_ENDPOINT) ??
+      'wss://jetstream1.us-east.bsky.network',
+    subscriptionMode:
+      maybeStr(process.env.FEEDGEN_SUBSCRIPTION_MODE) ?? 'Firehose',
     publisherDid:
       maybeStr(process.env.FEEDGEN_PUBLISHER_DID) ?? 'did:example:alice',
     subscriptionReconnectDelay:

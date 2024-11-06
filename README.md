@@ -1,3 +1,5 @@
+I have referred to [this page](https://gist.github.com/aendra-rininsland/32bc4fa0a9207b2cec8a9da331cab734)! Thanks!
+
 # ATProto Feed Generator
 
 This is a starter kit for creating ATProto Feed Generators. It's not feature complete, but should give you a good starting ground off of which to build and deploy a feed.
@@ -28,7 +30,7 @@ We've set up this simple server with SQLite to store and query data. Feel free t
 
 Next, you will need to do two things:
 
-1. Implement indexing logic in `src/subscription.ts`. 
+1. Implement indexing logic in `src/subscription.ts` or `src/jetstream-subscription.ts`. 
    
    This will subscribe to the repo subscription stream on startup, parse events and index them according to your provided logic.
 
@@ -47,11 +49,13 @@ The service must be set up to respond to HTTPS queries over port 443.
 
 ### Publishing your feed
 
-To publish your feed, go to the script at `scripts/publishFeedGen.ts` and fill in the variables at the top. Examples are included, and some are optional. To publish your feed generator, simply run `yarn publishFeed`.
+To publish your feed generator, simply run `yarn publishFeed`.
 
-To update your feed's display data (name, avatar, description, etc.), just update the relevant variables and re-run the script.
+To update your feed's display data (name, avatar, description, etc.), just re-run the script.
 
 After successfully running the script, you should be able to see your feed from within the app, as well as share it by embedding a link in a post (similar to a quote post).
+
+There is also an `yarn unpublishFeed` that does the opposite of these.
 
 ## Running the Server
 
@@ -131,7 +135,7 @@ We recommend, for instance, a compound cursor with a timestamp + a CID:
 
 How a feed generator fulfills the `getFeedSkeleton` request is completely at their discretion. At the simplest end, a Feed Generator could supply a "feed" that only contains some hardcoded posts.
 
-For most use cases, we recommend subscribing to the firehose at `com.atproto.sync.subscribeRepos`. This websocket will send you every record that is published on the network. Since Feed Generators do not need to provide hydrated posts, you can index as much or as little of the firehose as necessary.
+For most use cases, it seems better to use Jetstream, but there are cases where firehose is better.If you want to know more, click [here](https://github.com/bluesky-social/jetstream).
 
 Depending on your algorithm, you likely do not need to keep posts around for long. Unless your algorithm is intended to provide "posts you missed" or something similar, you can likely garbage collect any data that is older than 48 hours.
 

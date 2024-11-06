@@ -7,6 +7,7 @@ import feedGeneration from './methods/feed-generation'
 import describeGenerator from './methods/describe-generator'
 import { createDb, Database, migrateToLatest } from './db'
 import { FirehoseSubscription } from './subscription'
+import { JetstreamFirehoseSubscription } from './jetstream-subscription'
 import { AppContext, Config } from './config'
 import wellKnown from './well-known'
 
@@ -14,13 +15,13 @@ export class FeedGenerator {
   public app: express.Application
   public server?: http.Server
   public db: Database
-  public firehose: FirehoseSubscription
+  public firehose: FirehoseSubscription | JetstreamFirehoseSubscription
   public cfg: Config
 
   constructor(
     app: express.Application,
     db: Database,
-    firehose: FirehoseSubscription,
+    firehose: FirehoseSubscription | JetstreamFirehoseSubscription,
     cfg: Config,
   ) {
     this.app = app
@@ -32,7 +33,6 @@ export class FeedGenerator {
   static create(cfg: Config) {
     const app = express()
     const db = createDb(cfg.sqliteLocation)
-    const firehose = new FirehoseSubscription(db, cfg.subscriptionEndpoint)
 
     const didCache = new MemoryCache()
     const didResolver = new DidResolver({
@@ -58,7 +58,15 @@ export class FeedGenerator {
     app.use(server.xrpc.router)
     app.use(wellKnown(ctx))
 
-    return new FeedGenerator(app, db, firehose, cfg)
+    if (cfg.subscriptionMode === 'Firehose') {
+      const firehose = new FirehoseSubscription(db, cfg.subscriptionFirehoseEndpoint)
+      return new FeedGenerator(app, db, firehose, cfg)
+    } else if (cfg.subscriptionMode === 'Jetstream') {
+      const firehose = new JetstreamFirehoseSubscription(db, cfg.subscriptionJetstreamEndpoint)
+      return new FeedGenerator(app, db, firehose, cfg)
+    } else {
+      throw new Error('Invalid FEEDGEN_SUBSCRIPTION_MODE')
+    }
   }
 
   async start(): Promise<http.Server> {
