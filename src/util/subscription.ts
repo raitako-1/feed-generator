@@ -12,9 +12,10 @@ import {
   OutputSchema as RepoEvent,
   isCommit,
 } from '../lexicon/types/com/atproto/sync/subscribeRepos'
+import { handleEvent } from '../subscription'
 import { Database } from '../db'
 
-export abstract class FirehoseSubscriptionBase {
+export class FirehoseSubscription {
   public sub: Subscription<RepoEvent>
 
   constructor(public db: Database, public service: string) {
@@ -35,14 +36,17 @@ export abstract class FirehoseSubscriptionBase {
     })
   }
 
-  abstract handleEvent(evt: RepoEvent): Promise<void>
-
   async run(subscriptionReconnectDelay: number) {
     try {
       for await (const evt of this.sub) {
-        this.handleEvent(evt).catch((err) => {
+        try {
+          if (isCommit(evt)) {
+            const ops = await getOpsByType(evt)
+            await handleEvent(ops, this.db)
+          }
+        } catch (err) {
           console.error('repo subscription could not handle message', err)
-        })
+        }
         // update stored cursor every 20 events or so
         if (isCommit(evt) && evt.seq % 20 === 0) {
           await this.updateCursor(evt.seq)
@@ -140,7 +144,7 @@ function encodeQueryParam(value: unknown): string | string[] {
   throw new Error(`Cannot encode ${typeof value}s into query params`)
 }
 
-export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
+const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
   const car = await readCar(evt.blocks)
   const opsByType: OperationsByType = {
     posts: { creates: [], deletes: [] },
@@ -188,7 +192,7 @@ export const getOpsByType = async (evt: Commit): Promise<OperationsByType> => {
   return opsByType
 }
 
-type OperationsByType = {
+export type OperationsByType = {
   posts: Operations<PostRecord>
   reposts: Operations<RepostRecord>
   likes: Operations<LikeRecord>

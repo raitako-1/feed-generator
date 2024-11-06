@@ -30,7 +30,7 @@ We've set up this simple server with SQLite to store and query data. Feel free t
 
 Next, you will need to do two things:
 
-1. Implement indexing logic in `src/subscription.ts` or `src/jetstream-subscription.ts`. 
+1. Implement indexing logic in `src/subscription.ts`. 
    
    This will subscribe to the repo subscription stream on startup, parse events and index them according to your provided logic.
 

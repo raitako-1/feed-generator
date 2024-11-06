@@ -1,13 +1,16 @@
 import { WebSocketKeepAlive } from '../xrpc-server/stream/websocket-keepalive'
 import { Subscription } from '@atproto/xrpc-server'
 import { isObj, hasProp } from '@atproto/lexicon'
+import { ids } from '../lexicon/lexicons'
 import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
+import { OperationsByType, isPost, isRepost, isLike, isFollow } from './subscription'
+import { handleEvent } from '../subscription'
 import { Database } from '../db' // This is the standard DB class from bluesky-social/feed-generator
 
-export abstract class JetstreamFirehoseSubscriptionBase {
-  public sub: JetstreamSubscription
+export class JetstreamFirehoseSubscription {
+  public sub: JetstreamSubscription<JetstreamEvent>
 
-  constructor(public db: Database, public service: string, public collection: string = 'app.bsky.feed.post') {
+  constructor(public db: Database, public service: string, public collection: string = ids.AppBskyFeedPost) {
     this.sub = new JetstreamSubscription({
       service: service,
       method: 'subscribe',
@@ -17,7 +20,7 @@ export abstract class JetstreamFirehoseSubscriptionBase {
       }),
       validate: (value: unknown) => {
         try {
-          return value as JetstreamRecord // TODO validate??
+          return value as PostRecord // TODO validate??
         } catch (err) {
           console.error('repo subscription skipped invalid message', err)
         }
@@ -25,15 +28,18 @@ export abstract class JetstreamFirehoseSubscriptionBase {
     })
   }
 
-  abstract handleEvent(evt: JetstreamEvent): Promise<void>
-
   async run(subscriptionReconnectDelay: number) {
     let i = 0
     try {
       for await (const evt of this.sub) {
-        this.handleEvent(evt as JetstreamEvent).catch((err) => {
+        try {
+          if (isJetstreamCommit(evt)) {
+            const ops = getJetstreamOpsByType(evt)
+            await handleEvent(ops, this.db)
+          }
+        } catch (err) {
           console.error('repo subscription could not handle message', err)
-        })
+        }
         i++
         // update stored cursor every 20 events or so
         if (isJetstreamCommit(evt) && i % 20 === 0) {
@@ -43,7 +49,10 @@ export abstract class JetstreamFirehoseSubscriptionBase {
       }
     } catch (err) {
       console.error('repo subscription errored', err)
-      setTimeout(() => this.run(subscriptionReconnectDelay), subscriptionReconnectDelay)
+      setTimeout(
+        () => this.run(subscriptionReconnectDelay),
+        subscriptionReconnectDelay,
+      )
     }
   }
 
@@ -64,31 +73,65 @@ export abstract class JetstreamFirehoseSubscriptionBase {
     return res?.cursor
   }
 }
-export function isJetstreamCommit(v: unknown): v is JetstreamEvent {
+function isJetstreamCommit(v: unknown): v is JetstreamEventKindCommit {
   return isObj(v) && hasProp(v, 'kind') && v.kind === 'commit'
 }
 
-export interface JetstreamEvent {
+export type JetstreamEvent = JetstreamEventKindCommit | JetstreamEventKindAccount | JetstreamEventKindIdentity
+
+export interface JetstreamEventKindCommit {
   did: string
   time_us: number
-  kind: string
-  commit: JetstreamCommit
+  kind: 'commit'
+  commit: JetstreamEventKindCommitOperationCreate | JetstreamEventKindCommitOperationUpdate | JetstreamEventKindCommitOperationDelete
 }
 
-export interface JetstreamCommit {
+export interface JetstreamEventKindCommitOperationCreate {
   rev: string
-  operation: string
+  operation: 'create'
   collection: string
   rkey: string
-  record: JetstreamRecord
+  record: PostRecord
   cid: string
 }
 
-export interface JetstreamRecord extends PostRecord {}
+export interface JetstreamEventKindCommitOperationUpdate {
+  rev: string
+  operation: 'update'
+  collection: string
+  rkey: string
+  record: PostRecord
+}
 
-export interface JetstreamSubject {
-  cid: string
-  uri: string
+export interface JetstreamEventKindCommitOperationDelete {
+  rev: string
+  operation: 'delete'
+  collection: string
+  rkey: string
+}
+
+export interface JetstreamEventKindAccount {
+  did: string
+  time_us: number
+  kind: 'account'
+  account: {
+    active: boolean
+    did: string
+    seq: number
+    time: string
+  }
+}
+
+export interface JetstreamEventKindIdentity {
+  did: string
+  time_us: number
+  kind: 'identity'
+  identity: {
+    did: string
+    handle: string
+    seq: number
+    time: string
+  }
 }
 
 class JetstreamSubscription<T = unknown> extends Subscription {
@@ -152,22 +195,41 @@ function encodeQueryParam(value: unknown): string | string[] {
   throw new Error(`Cannot encode ${typeof value}s into query params`)
 }
 
-export const getJetstreamOpsByType = (evt: JetstreamEvent): OperationsByType => {
+const getJetstreamOpsByType = (evt: JetstreamEventKindCommit): OperationsByType => {
   const opsByType: OperationsByType = {
-    posts: [],
+    posts: { creates: [], deletes: [] },
+    reposts: { creates: [], deletes: [] },
+    likes: { creates: [], deletes: [] },
+    follows: { creates: [], deletes: [] },
   }
 
-  if (
-    evt?.commit?.collection === 'app.bsky.feed.post' &&
-    evt?.commit?.operation === 'create' &&
-    evt?.commit?.record
-  ) {
-    opsByType.posts.push(evt)
+  const uri = `at://${evt.did}/${evt.commit.collection}/${evt.commit.rkey}`
+
+  if (evt.commit.operation === 'update') {} // updates not supported yet
+
+  if (evt.commit.operation === 'create') {
+    if (evt.commit.collection === ids.AppBskyFeedPost && isPost(evt.commit.record)) {
+      opsByType.posts.creates.push({ record: evt.commit.record, uri, cid: evt.commit.cid, author: evt.did })
+    } else if (evt.commit.collection === ids.AppBskyFeedRepost && isRepost(evt.commit.record)) {
+      opsByType.reposts.creates.push({ record: evt.commit.record, uri, cid: evt.commit.cid, author: evt.did })
+    } else if (evt.commit.collection === ids.AppBskyFeedLike && isLike(evt.commit.record)) {
+      opsByType.likes.creates.push({ record: evt.commit.record, uri, cid: evt.commit.cid, author: evt.did })
+    } else if (evt.commit.collection === ids.AppBskyGraphFollow && isFollow(evt.commit.record)) {
+      opsByType.follows.creates.push({ record: evt.commit.record, uri, cid: evt.commit.cid, author: evt.did })
+    }
+  }
+
+  if (evt.commit.operation === 'delete') {
+    if (evt.commit.collection === ids.AppBskyFeedPost) {
+      opsByType.posts.deletes.push({ uri })
+    } else if (evt.commit.collection === ids.AppBskyFeedRepost) {
+      opsByType.reposts.deletes.push({ uri })
+    } else if (evt.commit.collection === ids.AppBskyFeedLike) {
+      opsByType.likes.deletes.push({ uri })
+    } else if (evt.commit.collection === ids.AppBskyGraphFollow) {
+      opsByType.follows.deletes.push({ uri })
+    }
   }
 
   return opsByType
-}
-
-type OperationsByType = {
-  posts: JetstreamEvent[]
 }
