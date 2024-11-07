@@ -2,7 +2,6 @@ import { WebSocketKeepAlive } from '../xrpc-server/stream/websocket-keepalive'
 import { Subscription } from '@atproto/xrpc-server'
 import { isObj, hasProp } from '@atproto/lexicon'
 import { ids } from '../lexicon/lexicons'
-import { Record as PostRecord } from '../lexicon/types/app/bsky/feed/post'
 import { OperationsByType, isPost, isRepost, isLike, isFollow } from './subscription'
 import { handleEvent } from '../subscription'
 import { Database } from '../db' // This is the standard DB class from bluesky-social/feed-generator
@@ -20,7 +19,7 @@ export class JetstreamFirehoseSubscription {
       }),
       validate: (value: unknown) => {
         try {
-          return value as PostRecord // TODO validate??
+          return value as JetstreamRecord // TODO validate??
         } catch (err) {
           console.error('repo subscription skipped invalid message', err)
         }
@@ -91,8 +90,12 @@ export interface JetstreamEventKindCommitOperationCreate {
   operation: 'create'
   collection: string
   rkey: string
-  record: PostRecord
+  record: JetstreamRecord
   cid: string
+}
+
+export interface JetstreamRecord {
+  [k: string]: unknown
 }
 
 export interface JetstreamEventKindCommitOperationUpdate {
@@ -100,7 +103,7 @@ export interface JetstreamEventKindCommitOperationUpdate {
   operation: 'update'
   collection: string
   rkey: string
-  record: PostRecord
+  [k: string]: unknown
 }
 
 export interface JetstreamEventKindCommitOperationDelete {
