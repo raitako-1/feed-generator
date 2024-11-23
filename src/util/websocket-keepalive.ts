@@ -1,3 +1,4 @@
+/**Copied from @atproto/xrpc-server/src/stream/websocket-keepalive.ts */
 import { SECOND, wait } from '@atproto/common'
 import { WebSocket, ClientOptions } from 'ws'
 import { streamByteChunks, CloseCode, DisconnectError } from '@atproto/xrpc-server'

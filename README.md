@@ -1,5 +1,3 @@
-I have referred to [this page](https://gist.github.com/aendra-rininsland/32bc4fa0a9207b2cec8a9da331cab734)! Thanks!
-
 # ATProto Feed Generator
 
 This is a starter kit for creating ATProto Feed Generators. It's not feature complete, but should give you a good starting ground off of which to build and deploy a feed.

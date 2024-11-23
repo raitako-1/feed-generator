@@ -1,4 +1,4 @@
-import { WebSocketKeepAlive } from '../xrpc-server/stream/websocket-keepalive'
+import { WebSocketKeepAlive } from './websocket-keepalive'
 import { Subscription as SubscriptionBase, ensureChunkIsMessage } from '@atproto/xrpc-server'
 import { cborToLexRecord, readCar } from '@atproto/repo'
 import { BlobRef } from '@atproto/lexicon'
