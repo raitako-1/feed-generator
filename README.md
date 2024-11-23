@@ -49,17 +49,17 @@ The service must be set up to respond to HTTPS queries over port 443.
 
 ### Publishing your feed
 
-To publish your feed generator, simply run `yarn publishFeed`.
+To publish your feed generator, simply run `pnpm run publishFeed`.
 
 To update your feed's display data (name, avatar, description, etc.), just re-run the script.
 
 After successfully running the script, you should be able to see your feed from within the app, as well as share it by embedding a link in a post (similar to a quote post).
 
-There is also an `yarn unpublishFeed` that does the opposite of these.
+There is also an `pnpm run unpublishFeed` that does the opposite of these.
 
 ## Running the Server
 
-Install dependencies with `yarn` and then run the server with `yarn start`. This will start the server on port 3000, or what's defined in `.env`. You can then watch the firehose output in the console and access the output of the default custom ALF feed at [http://localhost:3000/xrpc/app.bsky.feed.getFeedSkeleton?feed=at://did:example:alice/app.bsky.feed.generator/whats-alf](http://localhost:3000/xrpc/app.bsky.feed.getFeedSkeleton?feed=at://did:example:alice/app.bsky.feed.generator/whats-alf).
+Install dependencies with `pnpm i` and then run the server with `pnpm run dev`. This will start the server on port 3000, or what's defined in `.env`. You can then watch the firehose output in the console and access the output of the default custom ALF feed at [http://localhost:3000/xrpc/app.bsky.feed.getFeedSkeleton?feed=at://did:example:alice/app.bsky.feed.generator/whats-alf](http://localhost:3000/xrpc/app.bsky.feed.getFeedSkeleton?feed=at://did:example:alice/app.bsky.feed.generator/whats-alf).
 
 ## Some Details
 

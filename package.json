@@ -2,39 +2,60 @@
   "name": "feed-generator",
   "version": "1.0.0",
   "description": "atproto feed generator starter kit",
-  "main": "index.js",
-  "repository": "git@github.com:bluesky-social/feed-generator.git",
-  "author": "dholms <dtholmgren@gmail.com>",
-  "license": "MIT",
+  "main": "./dist/index.js",
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
-    "start": "ts-node src/index.ts",
-    "build": "tsc"
+    "dev": "ts-node ./src/index.ts",
+    "clean": "rimraf ./dist",
+    "build": "tsup",
+    "start": "node ./dist/index.js"
   },
+  "keywords": [],
+  "repository": "git@github.com:bluesky-social/feed-generator.git",
+  "author": "dholms <dtholmgren@gmail.com>",
+  "license": "MIT",
   "dependencies": {
-    "@atproto/api": "^0.13.14",
-    "@atproto/identity": "^0.4.2",
-    "@atproto/lexicon": "^0.4.2",
+    "@atproto/api": "^0.13.16",
+    "@atproto/common": "^0.4.4",
+    "@atproto/identity": "^0.4.3",
+    "@atproto/lexicon": "^0.4.3",
     "@atproto/repo": "^0.5.3",
-    "@atproto/syntax": "^0.3.0",
-    "@atproto/xrpc-server": "^0.7.1",
+    "@atproto/syntax": "^0.3.1",
+    "@atproto/xrpc-server": "^0.7.2",
     "better-sqlite3": "^11.5.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "kysely": "^0.27.4",
-    "multiformats": "^9.9.0"
+    "multiformats": "^9.9.0",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@atproto/lex-cli": "^0.5.2",
     "@types/better-sqlite3": "^7.6.11",
     "@types/express": "^4.17.21",
     "@types/node": "^22.9.0",
+    "@types/ws": "^8.5.13",
     "inquirer": "^12.0.1",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
+    "tsup": "^8.3.5",
     "typescript": "^5.6.3"
   },
   "engines": {
     "node": ">= 18",
-    "yarn": "1"
+    "npm": "use pnpm please!",
+    "yarn": "use pnpm please!",
+    "pnpm": ">= 7.19.0"
+  },
+  "tsup": {
+    "entry": [
+      "src",
+      "!src/**/__tests__/**",
+      "!src/**/*.test.*"
+    ],
+    "splitting": false,
+    "sourcemap": false,
+    "clean": true
   }
 }

@@ -97,7 +97,7 @@ class Subscription<T = unknown> extends SubscriptionBase {
       if (clone !== undefined && t !== undefined) {
         clone['$type'] = t.startsWith('#') ? this.opts.method + t : t
       }
-      const result = this.opts.validate(clone)
+      const result: any = this.opts.validate(clone)
       if (result !== undefined) {
         yield result
       }
