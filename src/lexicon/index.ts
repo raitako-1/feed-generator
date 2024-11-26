@@ -13,6 +13,26 @@ import * as AppBskyFeedDescribeFeedGenerator from './types/app/bsky/feed/describ
 import * as AppBskyFeedGetFeedSkeleton from './types/app/bsky/feed/getFeedSkeleton'
 import * as ComAtprotoSyncSubscribeRepos from './types/com/atproto/sync/subscribeRepos'
 
+export const APP_BSKY_FEED = {
+  DefsRequestLess: 'app.bsky.feed.defs#requestLess',
+  DefsRequestMore: 'app.bsky.feed.defs#requestMore',
+  DefsClickthroughItem: 'app.bsky.feed.defs#clickthroughItem',
+  DefsClickthroughAuthor: 'app.bsky.feed.defs#clickthroughAuthor',
+  DefsClickthroughReposter: 'app.bsky.feed.defs#clickthroughReposter',
+  DefsClickthroughEmbed: 'app.bsky.feed.defs#clickthroughEmbed',
+  DefsInteractionSeen: 'app.bsky.feed.defs#interactionSeen',
+  DefsInteractionLike: 'app.bsky.feed.defs#interactionLike',
+  DefsInteractionRepost: 'app.bsky.feed.defs#interactionRepost',
+  DefsInteractionReply: 'app.bsky.feed.defs#interactionReply',
+  DefsInteractionQuote: 'app.bsky.feed.defs#interactionQuote',
+  DefsInteractionShare: 'app.bsky.feed.defs#interactionShare',
+}
+export const APP_BSKY_GRAPH = {
+  DefsModlist: 'app.bsky.graph.defs#modlist',
+  DefsCuratelist: 'app.bsky.graph.defs#curatelist',
+  DefsReferencelist: 'app.bsky.graph.defs#referencelist',
+}
+
 export function createServer(options?: XrpcOptions): Server {
   return new Server(options)
 }
@@ -42,18 +62,30 @@ export class AppNS {
 export class AppBskyNS {
   _server: Server
   actor: AppBskyActorNS
+  embed: AppBskyEmbedNS
   feed: AppBskyFeedNS
   graph: AppBskyGraphNS
+  richtext: AppBskyRichtextNS
 
   constructor(server: Server) {
     this._server = server
     this.actor = new AppBskyActorNS(server)
+    this.embed = new AppBskyEmbedNS(server)
     this.feed = new AppBskyFeedNS(server)
     this.graph = new AppBskyGraphNS(server)
+    this.richtext = new AppBskyRichtextNS(server)
   }
 }
 
 export class AppBskyActorNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class AppBskyEmbedNS {
   _server: Server
 
   constructor(server: Server) {
@@ -92,6 +124,14 @@ export class AppBskyFeedNS {
 }
 
 export class AppBskyGraphNS {
+  _server: Server
+
+  constructor(server: Server) {
+    this._server = server
+  }
+}
+
+export class AppBskyRichtextNS {
   _server: Server
 
   constructor(server: Server) {

@@ -6,6 +6,7 @@
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
+    "lex-gen-server": "./node_modules/.bin/lex gen-server ./src/lexicon ./lexicons/**/**/**/*.json",
     "dev": "ts-node ./src/index.ts",
     "clean": "rimraf ./dist",
     "build": "tsup",
