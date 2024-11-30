@@ -6,10 +6,10 @@
   "scripts": {
     "publishFeed": "ts-node scripts/publishFeedGen.ts",
     "unpublishFeed": "ts-node scripts/unpublishFeedGen.ts",
-    "lex-gen-server": "./node_modules/.bin/lex gen-server ./src/lexicon ./lexicons/**/**/**/*.json",
+    "lex-gen-server": "./node_modules/.bin/lex gen-server ./src/lexicon ./lexicons/**/**/*.json ./lexicons/**/**/**/*.json",
     "dev": "ts-node ./src/index.ts",
     "clean": "rimraf ./dist",
-    "build": "tsup",
+    "build": "tsc -p ./",
     "start": "node ./dist/index.js"
   },
   "keywords": [],
@@ -40,7 +40,6 @@
     "inquirer": "^12.0.1",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "tsup": "^8.3.5",
     "typescript": "^5.6.3"
   },
   "engines": {
@@ -48,15 +47,5 @@
     "npm": "use pnpm please!",
     "yarn": "use pnpm please!",
     "pnpm": ">= 7.19.0"
-  },
-  "tsup": {
-    "entry": [
-      "src",
-      "!src/**/__tests__/**",
-      "!src/**/*.test.*"
-    ],
-    "splitting": false,
-    "sourcemap": false,
-    "clean": true
   }
 }
