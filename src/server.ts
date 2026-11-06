@@ -11,6 +11,7 @@ import { createDb, migrateToLatest } from './db/index.js'
 import * as lex from './lexicons/index.js'
 import describeGenerator from './methods/describe-generator.js'
 import feedGeneration from './methods/feed-generation.js'
+import interactions from './methods/interactions.js'
 import { handleEvent } from './subscription.js'
 import { type AppContext, type FeedGeneratorConfig } from './util/config.js'
 import { createLogger } from './util/logger.js'
@@ -96,6 +97,7 @@ export class FeedGenerator {
     })
     feedGeneration(server, ctx)
     describeGenerator(server, ctx)
+    interactions(server, ctx)
     app.use(server.router)
     app.use(wellKnown(ctx))
     
