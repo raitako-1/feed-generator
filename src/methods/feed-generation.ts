@@ -6,8 +6,9 @@ import { AtUri } from '@atproto/syntax'
 import * as xrpc from '@atproto/xrpc-server'
 
 export default function (server: xrpc.Server, ctx: AppContext) {
-  server.method(app.bsky.feed.getFeedSkeleton.$nsid, async (hCtx: any): Promise<app.bsky.feed.getFeedSkeleton.$Output> => {
-    const feedUri = new AtUri(hCtx.params.feed)
+  server.method(app.bsky.feed.getFeedSkeleton.$nsid, async ({ params }): Promise<app.bsky.feed.getFeedSkeleton.$Output> => {
+    const hParams = params as app.bsky.feed.getFeedSkeleton.$Params
+    const feedUri = new AtUri(hParams.feed)
     const algo = algos[feedUri.rkey]
     if (
       feedUri.hostname !== ctx.cfg.publisher.did ||
@@ -29,7 +30,7 @@ export default function (server: xrpc.Server, ctx: AppContext) {
      * )
      */
 
-    const body = await algo(ctx, hCtx.params)
+    const body = await algo(ctx, hParams)
     return {
       encoding: 'application/json',
       body: body,
